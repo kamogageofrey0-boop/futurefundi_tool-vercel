@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="overline">Configuration</div>
+  <h1>Settings</h1>
+  <p>Adjust global defaults and per-pathway parameters. Changes take effect immediately on the next estimate.</p>
+</div>
+
+<form method="POST" action="{{ url_for('settings_page') }}">
+
+  <!-- GLOBAL SETTINGS -->
+  <div class="card">
+    <div class="card-title">
+      <div class="icon">🌐</div>
+      Global Settings
+    </div>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-group">
+        <label for="theme">Interface Theme</label>
+        <select name="theme" id="theme">
+          <option value="light" {{ 'selected' if settings.theme == 'light' else '' }}>☀️ Light</option>
+          <option value="dark" {{ 'selected' if settings.theme == 'dark' else '' }}>🌙 Dark</option>
+        </select>
+        <span class="input-hint">Theme applies across all pages after saving.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="price_per_student">Price per Student (UGX)</label>
+        <input type="number" id="price_per_student" name="price_per_student"
+          min="0" value="{{ settings.price_per_student }}" />
+        <span class="input-hint">Default: 280,000 UGX</span>
+      </div>
+
+      <div class="form-group">
+        <label for="ratio_young">Students per Teacher (Ages 6–10)</label>
+        <input type="number" id="ratio_young" name="ratio_young"
+          min="1" value="{{ settings.ratio_young }}" />
+        <span class="input-hint">Default: 1 teacher per 15 students</span>
+      </div>
+
+      <div class="form-group">
+        <label for="ratio_older">Students per Teacher (Ages 11+)</label>
+        <input type="number" id="ratio_older" name="ratio_older"
+          min="1" value="{{ settings.ratio_older }}" />
+        <span class="input-hint">Default: 1 teacher per 25 students</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PER PATHWAY SETTINGS -->
+  <div class="card">
+    <div class="card-title">
+      <div class="icon">🛤️</div>
+      Pathway Parameters
+    </div>
+    <p class="text-muted" style="margin-bottom:20px;font-size:0.875rem;">
+      Adjust learning duration and resource ratios per pathway. Ratios are expressed as "1 resource per X students" — set to 0 to disable.
+    </p>
+
+    <div class="table-wrap">
+      <table class="settings-table">
+        <thead>
+          <tr>
+            <th>Pathway</th>
+            <th>Duration (weeks)</th>
+            <th>1 Computer per X students</th>
+            <th>1 Kit per X students</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in pathways %}
+          {% set key = p | replace(' ', '_') | lower %}
+          <tr>
+            <td>
+              <strong>{{ p }}</strong>
+            </td>
+            <td>
+              <input type="number" name="weeks_{{ key }}" min="1"
+                value="{{ settings.pathway_weeks[p] }}"
+                style="width:90px;" />
+            </td>
+            <td>
+              <input type="number" name="comp_{{ key }}" min="0"
+                value="{{ settings.pathway_computer_ratio[p] }}"
+                style="width:90px;" />
+            </td>
+            <td>
+              <input type="number" name="kit_{{ key }}" min="0"
+                value="{{ settings.pathway_kit_ratio[p] }}"
+                style="width:90px;" />
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SAVE -->
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+    <button type="submit" class="btn btn-primary btn-lg">💾 Save Settings</button>
+    <a href="{{ url_for('input_page') }}" class="btn btn-secondary">← Back to Input</a>
+  </div>
+
+</form>
+{% endblock %}

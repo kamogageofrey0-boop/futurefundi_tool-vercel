@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Input{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="overline">Future Fundi Program Estimator</div>
+  <h1>Program Setup</h1>
+  <p>Configure your students, pathways, and learning plan below.</p>
+</div>
+
+<form method="POST" action="{{ url_for('input_page') }}" id="mainForm">
+
+  <!-- STUDENT MODE -->
+  <div class="card">
+    <div class="card-title">
+      <div class="icon">👥</div>
+      Student Age Groups
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>Which age groups are you enrolling?</label>
+      <div class="radio-group">
+        <div class="radio-btn">
+          <input type="radio" name="student_mode" id="mode_young" value="young"
+            {{ 'checked' if last.get('student_mode') == 'young' else '' }} />
+          <label for="mode_young">🧒 Ages 6–10 only</label>
+        </div>
+        <div class="radio-btn">
+          <input type="radio" name="student_mode" id="mode_older" value="older"
+            {{ 'checked' if last.get('student_mode') == 'older' else '' }} />
+          <label for="mode_older">🧑 Ages 11+ only</label>
+        </div>
+        <div class="radio-btn">
+          <input type="radio" name="student_mode" id="mode_both" value="both"
+            {{ 'checked' if (not last or last.get('student_mode','both') == 'both') else '' }} />
+          <label for="mode_both">👨‍👩‍👧 Both groups</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid form-grid-2">
+      <div class="form-group" id="group_young" style="display:none;">
+        <label for="students_young">Students aged 6–10</label>
+        <input type="number" id="students_young" name="students_young" min="0"
+          value="{{ last.get('students_young', 0) }}" placeholder="e.g. 30" />
+        <span class="input-hint">1 teacher per {{ settings.ratio_young }} students</span>
+      </div>
+      <div class="form-group" id="group_older" style="display:none;">
+        <label for="students_older">Students aged 11+</label>
+        <input type="number" id="students_older" name="students_older" min="0"
+          value="{{ last.get('students_older', 0) }}" placeholder="e.g. 50" />
+        <span class="input-hint">1 teacher per {{ settings.ratio_older }} students</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATHWAY MODE -->
+  <div class="card">
+    <div class="card-title">
+      <div class="icon">🛤️</div>
+      Learning Pathways
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>How would you like to handle pathways?</label>
+      <div class="radio-group">
+        <div class="radio-btn">
+          <input type="radio" name="pathway_mode" id="pm_ignore" value="ignore"
+            {{ 'checked' if (not last or last.get('pathway_mode','ignore') == 'ignore') else '' }} />
+          <label for="pm_ignore">⏭️ Ignore pathways</label>
+        </div>
+        <div class="radio-btn">
+          <input type="radio" name="pathway_mode" id="pm_all" value="all"
+            {{ 'checked' if last.get('pathway_mode') == 'all' else '' }} />
+          <label for="pm_all">✅ All pathways</label>
+        </div>
+        <div class="radio-btn">
+          <input type="radio" name="pathway_mode" id="pm_specific" value="specific"
+            {{ 'checked' if last.get('pathway_mode') == 'specific' else '' }} />
+          <label for="pm_specific">🔍 Select specific</label>
+        </div>
+      </div>
+    </div>
+
+    <div id="pathway_checkboxes" class="hidden">
+      <label style="margin-bottom:10px; display:block;">Choose pathways:</label>
+      <div class="checkbox-grid">
+        {% for p in pathways %}
+        <div class="checkbox-item">
+          <input type="checkbox" name="pathways" id="pw_{{ loop.index }}" value="{{ p }}"
+            {{ 'checked' if last.get('selected_pathways') and p in last.get('selected_pathways', []) else '' }} />
+          <label for="pw_{{ loop.index }}">{{ p }}</label>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div id="pathway_all_info" class="hidden alert">
+      All 8 pathways will be included in the estimate.
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+    <button type="submit" class="btn btn-primary btn-lg">
+      📊 Generate Estimate →
+    </button>
+    <a href="{{ url_for('settings_page') }}" class="btn btn-secondary">⚙️ Adjust Settings</a>
+  </div>
+
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Student mode toggle
+  function updateStudentGroups() {
+    var mode = document.querySelector('input[name="student_mode"]:checked');
+    if (!mode) return;
+    var gY = document.getElementById('group_young');
+    var gO = document.getElementById('group_older');
+    var inY = document.getElementById('students_young');
+    var inO = document.getElementById('students_older');
+    if (mode.value === 'young') {
+      gY.style.display = ''; gO.style.display = 'none';
+      inO.value = 0;
+    } else if (mode.value === 'older') {
+      gO.style.display = ''; gY.style.display = 'none';
+      inY.value = 0;
+    } else {
+      gY.style.display = ''; gO.style.display = '';
+    }
+  }
+
+  // Pathway mode toggle
+  function updatePathwayMode() {
+    var mode = document.querySelector('input[name="pathway_mode"]:checked');
+    if (!mode) return;
+    var cb = document.getElementById('pathway_checkboxes');
+    var ai = document.getElementById('pathway_all_info');
+    cb.classList.add('hidden');
+    ai.classList.add('hidden');
+    if (mode.value === 'specific') cb.classList.remove('hidden');
+    if (mode.value === 'all') ai.classList.remove('hidden');
+  }
+
+  document.querySelectorAll('input[name="student_mode"]').forEach(function(r) {
+    r.addEventListener('change', updateStudentGroups);
+  });
+  document.querySelectorAll('input[name="pathway_mode"]').forEach(function(r) {
+    r.addEventListener('change', updatePathwayMode);
+  });
+
+  updateStudentGroups();
+  updatePathwayMode();
+</script>
+{% endblock %}

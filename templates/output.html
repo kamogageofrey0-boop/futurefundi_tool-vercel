@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Output{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="overline">MLS Program Estimate</div>
+  <h1>Program Summary</h1>
+  <p>Review the full breakdown of your proposed MLS program below.</p>
+</div>
+
+<!-- FEE HIGHLIGHT -->
+<div class="fee-display">
+  <div class="fee-label">Estimated Total Programme Fee</div>
+  <div class="fee-amount">UGX {{ "{:,.0f}".format(total_fee) }}</div>
+  <div style="margin-top:8px;opacity:0.8;font-size:0.85rem;">
+    {{ total }} student{{ 's' if total != 1 else '' }} × UGX {{ "{:,.0f}".format(settings.price_per_student) }}
+  </div>
+</div>
+
+<!-- STATS GRID -->
+<div class="stats-grid">
+  <div class="stat-card highlight">
+    <div class="stat-icon">👨‍🎓</div>
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-label">Total Students</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">🧒</div>
+    <div class="stat-value">{{ sy }}</div>
+    <div class="stat-label">Ages 6–10</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">🧑</div>
+    <div class="stat-value">{{ so }}</div>
+    <div class="stat-label">Ages 11+</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">👩‍🏫</div>
+    <div class="stat-value">{{ teachers_young }}</div>
+    <div class="stat-label">Teachers (6–10)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">👨‍🏫</div>
+    <div class="stat-value">{{ teachers_older }}</div>
+    <div class="stat-label">Teachers (11+)</div>
+  </div>
+  <div class="stat-card accent">
+    <div class="stat-icon">🏫</div>
+    <div class="stat-value">{{ total_teachers }}</div>
+    <div class="stat-label">Total Teachers</div>
+  </div>
+</div>
+
+<!-- PATHWAY INFO -->
+<div class="card">
+  <div class="card-title">
+    <div class="icon">🛤️</div>
+    Pathway Configuration
+  </div>
+  <div class="pathway-mode-label">
+    <strong>Mode:</strong>
+    {% if pathway_mode == 'ignore' %}
+      <span class="badge">No pathways selected</span>
+    {% elif pathway_mode == 'all' %}
+      <span class="badge">All pathways</span>
+    {% else %}
+      <span class="badge">Custom selection</span>
+    {% endif %}
+  </div>
+
+  {% if selected_pathways %}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+      {% for p in selected_pathways %}
+        <span class="badge badge-yellow">{{ p }}</span>
+      {% endfor %}
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span>Estimated Total Learning Time:</span>
+      <span class="time-badge">⏱ {{ learning_time }} week{{ 's' if learning_time != 1 else '' }}</span>
+      <span class="text-muted" style="font-size:0.8rem;">(pathways run in batches of 2)</span>
+    </div>
+  {% else %}
+    <p class="text-muted">No pathways were selected for this estimate.</p>
+  {% endif %}
+</div>
+
+<!-- PER PATHWAY DETAILS -->
+{% if pathway_details %}
+<h2 style="margin-bottom:20px;font-size:1.3rem;">📚 Pathway Details</h2>
+
+{% for pw in pathway_details %}
+<div class="pathway-section">
+  <div class="pathway-header">
+    <span style="font-size:1.4rem;">
+      {% if pw.name == 'Robotics' %}🤖
+      {% elif pw.name == 'CAD' %}📐
+      {% elif pw.name == 'AI' %}🧠
+      {% elif pw.name == 'Electronics' %}⚡
+      {% elif pw.name == 'Data Science' %}📊
+      {% elif pw.name == 'Web Development' %}🌐
+      {% elif pw.name == 'App Development' %}📱
+      {% elif pw.name == 'Cyber Security' %}🔒
+      {% else %}📚{% endif %}
+    </span>
+    <h3>{{ pw.name }}</h3>
+    <span class="pathway-weeks">{{ pw.weeks }} weeks</span>
+  </div>
+
+  <div class="pathway-body">
+
+    <!-- Quantitative Resources Table -->
+    <div class="pathway-sub-section">
+      <div class="pathway-sub-title">📦 Quantitative Resources</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Resource</th>
+              <th>Ratio</th>
+              <th>Required ({{ total }} students)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>💻 Computers</td>
+              <td>1 per {{ pw.comp_ratio }} students</td>
+              <td><strong>{{ pw.computers }}</strong></td>
+            </tr>
+            <tr>
+              <td>🧰 Kits</td>
+              <td>1 per {{ pw.kit_ratio }} students</td>
+              <td><strong>{{ pw.kits }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Descriptive Resources -->
+    <div class="pathway-sub-section">
+      <div class="pathway-sub-title">🔧 Resources Needed</div>
+      <ul class="item-list">
+        {% for r in pw.resources %}
+        <li>{{ r }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Core Skills -->
+    <div class="pathway-sub-section">
+      <div class="pathway-sub-title">🎯 Core Skills</div>
+      <ul class="item-list">
+        {% for s in pw.skills %}
+        <li>{{ s }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Possible Careers -->
+    <div class="pathway-sub-section">
+      <div class="pathway-sub-title">💼 Possible Careers</div>
+      <ul class="item-list">
+        {% for c in pw.careers %}
+        <li>{{ c }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- ACTION BUTTONS -->
+<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+  <a href="{{ url_for('input_page') }}" class="btn btn-primary">✏️ Edit Inputs</a>
+  <a href="{{ url_for('settings_page') }}" class="btn btn-secondary">⚙️ Adjust Settings</a>
+  <button onclick="window.print()" class="btn btn-secondary">🖨️ Print / Save PDF</button>
+</div>
+{% endblock %}

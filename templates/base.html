@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ session.get('settings', {}).get('theme', 'light') }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Future Fundi{% endblock %} – MLS Program Estimator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body data-theme="{{ session.get('settings', {}).get('theme', 'light') }}">
+
+<nav>
+  <div class="nav-inner">
+    <a href="{{ url_for('index') }}" class="nav-brand">
+      <div class="nav-logo">🚀</div>
+      <span>Future <span class="accent">Fundi</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="{{ url_for('input_page') }}" class="{{ 'active' if request.endpoint == 'input_page' else '' }}">📝 Input</a>
+      <a href="{{ url_for('output_page') }}" class="{{ 'active' if request.endpoint == 'output_page' else '' }}">📊 Output</a>
+      <a href="{{ url_for('settings_page') }}" class="{{ 'active' if request.endpoint == 'settings_page' else '' }}">⚙️ Settings</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  {% block content %}{% endblock %}
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
