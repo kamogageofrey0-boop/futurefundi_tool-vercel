@@ -1,19 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import math
+#hello
+app = Flask(__name__)
+app.secret_key = 'futurefundi-secret-2024'
 
-# -----------------------------
-# Flask App Setup
-# -----------------------------
-app = Flask(
-    __name__,
-    template_folder='../templates',  # relative path from api/index.py
-    static_folder='../static'        # relative path for CSS/JS/images
-)
-app.secret_key = 'futurefundi-secret-2026'
-
-# -----------------------------
-# Pathway Data
-# -----------------------------
 PATHWAY_DATA = {
     'Robotics': {
         'resources': [
@@ -214,9 +204,7 @@ DEFAULT_SETTINGS = {
     'pathway_kit_ratio': {p: 4 for p in ALL_PATHWAYS},
 }
 
-# -----------------------------
-# Utility Functions
-# -----------------------------
+
 def get_settings():
     if 'settings' not in session:
         session['settings'] = DEFAULT_SETTINGS.copy()
@@ -225,8 +213,12 @@ def get_settings():
         session['settings']['pathway_kit_ratio'] = DEFAULT_SETTINGS['pathway_kit_ratio'].copy()
     return session['settings']
 
+
 def calc_teachers(count, ratio):
-    return math.ceil(count / ratio) if count and ratio else 0
+    if count == 0 or ratio == 0:
+        return 0
+    return math.ceil(count / ratio)
+
 
 def calc_learning_time(pathways, weeks_map):
     if not pathways:
@@ -237,15 +229,17 @@ def calc_learning_time(pathways, weeks_map):
         total += max(weeks_map.get(p, 12) for p in batch)
     return total
 
-def calc_resources(total_students, ratio):
-    return math.ceil(total_students / ratio) if ratio else 0
 
-# -----------------------------
-# Routes
-# -----------------------------
+def calc_resources(total_students, ratio):
+    if ratio == 0:
+        return 0
+    return math.ceil(total_students / ratio)
+
+
 @app.route('/')
 def index():
     return redirect(url_for('input_page'))
+
 
 @app.route('/input', methods=['GET', 'POST'])
 def input_page():
@@ -256,7 +250,6 @@ def input_page():
         students_older = int(request.form.get('students_older', 0) or 0)
         pathway_mode = request.form.get('pathway_mode', 'ignore')
         selected_pathways = []
-
         if pathway_mode == 'all':
             selected_pathways = ALL_PATHWAYS[:]
         elif pathway_mode == 'specific':
@@ -275,6 +268,7 @@ def input_page():
     last = session.get('last_input', {})
     return render_template('input.html', settings=settings, pathways=ALL_PATHWAYS, last=last)
 
+
 @app.route('/output')
 def output_page():
     settings = get_settings()
@@ -287,13 +281,18 @@ def output_page():
     so = data['students_older'] if mode in ('older', 'both') else 0
     total = sy + so
 
-    teachers_young = calc_teachers(sy, settings['ratio_young'])
-    teachers_older = calc_teachers(so, settings['ratio_older'])
+    ratio_young = settings['ratio_young']
+    ratio_older = settings['ratio_older']
+    teachers_young = calc_teachers(sy, ratio_young)
+    teachers_older = calc_teachers(so, ratio_older)
     total_teachers = teachers_young + teachers_older
-    total_fee = total * settings['price_per_student']
+
+    price = settings['price_per_student']
+    total_fee = total * price
 
     selected_pathways = data['selected_pathways']
-    learning_time = calc_learning_time(selected_pathways, settings['pathway_weeks'])
+    weeks_map = settings['pathway_weeks']
+    learning_time = calc_learning_time(selected_pathways, weeks_map)
 
     pathway_details = []
     for p in selected_pathways:
@@ -303,7 +302,7 @@ def output_page():
         kits = calc_resources(total, kit_ratio)
         pathway_details.append({
             'name': p,
-            'weeks': settings['pathway_weeks'].get(p, 12),
+            'weeks': weeks_map.get(p, 12),
             'computers': computers,
             'kits': kits,
             'comp_ratio': comp_ratio,
@@ -329,6 +328,7 @@ def output_page():
         mode=mode,
     )
 
+
 @app.route('/settings', methods=['GET', 'POST'])
 def settings_page():
     settings = get_settings()
@@ -349,3 +349,7 @@ def settings_page():
         return redirect(url_for('settings_page'))
 
     return render_template('settings.html', settings=settings, pathways=ALL_PATHWAYS)
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
