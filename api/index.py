@@ -1,32 +1,209 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import math
 
-app = Flask(__name__)
-app.secret_key = 'futurefundi-secret-2024'
+# -----------------------------
+# Flask App Setup
+# -----------------------------
+app = Flask(
+    __name__,
+    template_folder='../templates',  # relative path from api/index.py
+    static_folder='../static'        # relative path for CSS/JS/images
+)
+app.secret_key = 'futurefundi-secret-2026'
 
-# -------------------
-# Data and defaults
-# -------------------
+# -----------------------------
+# Pathway Data
+# -----------------------------
 PATHWAY_DATA = {
     'Robotics': {
-        'resources': ['Microcontroller boards', 'Raspberry Pi boards', 'DC motors, servos and motor drivers', 'Sensor kits', 'Robot chassis, wheels and batteries', 'Programming computers'],
-        'skills': ['Embedded programming', 'Motor control and motion logic', 'Sensor integration', 'Basic control concepts', 'Hardware debugging and wiring'],
-        'careers': ['Robotics technician', 'Automation technician', 'Mechatronics technician', 'Embedded systems technician', 'Robotics field support engineer'],
+        'resources': [
+            'Microcontroller boards',
+            'Single-board computers from Raspberry Pi Foundation',
+            'DC motors, servos and motor drivers',
+            'Sensor kits (ultrasonic, IMU, line sensors, encoders)',
+            'Robot chassis, wheels and batteries',
+            'Programming computers',
+        ],
+        'skills': [
+            'Embedded programming',
+            'Motor control and motion logic',
+            'Sensor integration',
+            'Basic control concepts (PID awareness)',
+            'Hardware debugging and wiring',
+        ],
+        'careers': [
+            'Robotics technician',
+            'Automation technician',
+            'Mechatronics technician',
+            'Embedded systems technician',
+            'Robotics field support engineer',
+        ],
     },
     'CAD': {
-        'resources': ['High-performance computers', 'Professional CAD software', '3D printer', 'Digital calipers'],
-        'skills': ['2D sketching', '3D modelling', 'Assemblies', 'Technical drawings', 'Export for manufacturing'],
-        'careers': ['CAD technician', 'Mechanical design assistant', 'Product design technician', 'Architectural CAD technician', 'Prototyping technician'],
+        'resources': [
+            'High-performance computers',
+            'Professional CAD software (education licenses)',
+            '3D printer for prototyping',
+            'Digital calipers and measuring tools',
+        ],
+        'skills': [
+            '2D sketching and constraints',
+            '3D solid modelling',
+            'Assemblies',
+            'Technical drawings',
+            'Export for manufacturing and 3D printing',
+        ],
+        'careers': [
+            'CAD technician',
+            'Mechanical design assistant',
+            'Product design technician',
+            'Architectural CAD technician',
+            'Prototyping / 3D printing technician',
+        ],
     },
     'AI': {
-        'resources': ['Computers', 'Python', 'ML libraries', 'Notebook environment', 'Optional GPU'],
-        'skills': ['Python for AI', 'Data preparation', 'Model training', 'Evaluation', 'Basic deep learning concepts'],
-        'careers': ['Junior AI engineer', 'Junior ML engineer', 'Computer vision engineer', 'AI solutions developer', 'Applied AI research assistant'],
+        'resources': [
+            'Computers or laptops',
+            'Python development environment',
+            'Machine learning and deep-learning libraries',
+            'Notebook environment',
+            'Optional GPU workstation',
+        ],
+        'skills': [
+            'Python for AI',
+            'Data preparation',
+            'Model training and testing',
+            'Model evaluation',
+            'Basic deep learning concepts',
+        ],
+        'careers': [
+            'Junior AI engineer',
+            'Junior machine learning engineer',
+            'Computer vision engineer (junior)',
+            'AI solutions developer',
+            'Applied AI research assistant',
+        ],
     },
-    # Add the remaining pathways as in your original code
+    'Electronics': {
+        'resources': [
+            'Soldering stations',
+            'Digital multimeters',
+            'Bench power supplies',
+            'One shared oscilloscope',
+            'Breadboards and jumper wires',
+            'Component stock (resistors, capacitors, diodes, transistors, regulators, sensors)',
+            'Microcontroller development boards from Arduino',
+        ],
+        'skills': [
+            'Reading electronic schematics',
+            'Circuit construction',
+            'Measurement and testing',
+            'Fault finding and repair',
+            'Embedded hardware interfacing',
+        ],
+        'careers': [
+            'Electronics technician',
+            'Embedded systems technician',
+            'IoT technician',
+            'PCB assembly and test technician',
+            'Instrumentation technician',
+        ],
+    },
+    'Data Science': {
+        'resources': [
+            'Computer lab',
+            'Python environment',
+            'Data analysis and visualisation tools',
+            'SQL and database tools',
+        ],
+        'skills': [
+            'Data cleaning and preparation',
+            'Exploratory data analysis',
+            'Data visualisation',
+            'Statistics for data analysis',
+            'Introductory machine learning',
+        ],
+        'careers': [
+            'Data analyst',
+            'Business intelligence analyst',
+            'Junior data scientist',
+            'Data technician',
+            'Research data assistant',
+        ],
+    },
+    'Web Development': {
+        'resources': [
+            'Computers',
+            'Code editors',
+            'Browsers and developer tools',
+            'Local development servers',
+            'Test hosting environment',
+        ],
+        'skills': [
+            'HTML, CSS and JavaScript',
+            'Backend programming',
+            'API development',
+            'Database integration',
+            'Authentication and deployment',
+        ],
+        'careers': [
+            'Front-end web developer',
+            'Back-end web developer',
+            'Full-stack web developer',
+            'Web application support engineer',
+            'Junior software engineer',
+        ],
+    },
+    'App Development': {
+        'resources': [
+            'Computers',
+            'Mobile development SDKs',
+            'Device emulators',
+            'Real Android smartphones for testing',
+        ],
+        'skills': [
+            'Mobile UI design',
+            'Application logic and navigation',
+            'API integration',
+            'Local data storage',
+            'App packaging and deployment',
+        ],
+        'careers': [
+            'Mobile app developer',
+            'Mobile software engineer',
+            'Junior mobile developer',
+            'App UI/UX developer',
+            'Mobile solutions technician',
+        ],
+    },
+    'Cyber Security': {
+        'resources': [
+            'Computer lab',
+            'Virtual machines',
+            'Isolated practice network',
+            'Network monitoring and security tools',
+            'Vulnerable test systems',
+            'Ethical and legal usage policy for the lab',
+        ],
+        'skills': [
+            'Networking fundamentals',
+            'Linux system administration',
+            'Vulnerability identification',
+            'Web and system security basics',
+            'Incident response concepts',
+        ],
+        'careers': [
+            'Cybersecurity technician',
+            'SOC analyst (junior)',
+            'IT security support officer',
+            'Network security technician',
+            'Vulnerability assessment assistant',
+        ],
+    },
 }
 
 ALL_PATHWAYS = list(PATHWAY_DATA.keys())
+
 DEFAULT_SETTINGS = {
     'theme': 'light',
     'price_per_student': 280000,
@@ -37,9 +214,9 @@ DEFAULT_SETTINGS = {
     'pathway_kit_ratio': {p: 4 for p in ALL_PATHWAYS},
 }
 
-# -------------------
-# Utility functions
-# -------------------
+# -----------------------------
+# Utility Functions
+# -----------------------------
 def get_settings():
     if 'settings' not in session:
         session['settings'] = DEFAULT_SETTINGS.copy()
@@ -49,9 +226,7 @@ def get_settings():
     return session['settings']
 
 def calc_teachers(count, ratio):
-    if count == 0 or ratio == 0:
-        return 0
-    return math.ceil(count / ratio)
+    return math.ceil(count / ratio) if count and ratio else 0
 
 def calc_learning_time(pathways, weeks_map):
     if not pathways:
@@ -63,13 +238,11 @@ def calc_learning_time(pathways, weeks_map):
     return total
 
 def calc_resources(total_students, ratio):
-    if ratio == 0:
-        return 0
-    return math.ceil(total_students / ratio)
+    return math.ceil(total_students / ratio) if ratio else 0
 
-# -------------------
+# -----------------------------
 # Routes
-# -------------------
+# -----------------------------
 @app.route('/')
 def index():
     return redirect(url_for('input_page'))
@@ -83,6 +256,7 @@ def input_page():
         students_older = int(request.form.get('students_older', 0) or 0)
         pathway_mode = request.form.get('pathway_mode', 'ignore')
         selected_pathways = []
+
         if pathway_mode == 'all':
             selected_pathways = ALL_PATHWAYS[:]
         elif pathway_mode == 'specific':
@@ -113,18 +287,13 @@ def output_page():
     so = data['students_older'] if mode in ('older', 'both') else 0
     total = sy + so
 
-    ratio_young = settings['ratio_young']
-    ratio_older = settings['ratio_older']
-    teachers_young = calc_teachers(sy, ratio_young)
-    teachers_older = calc_teachers(so, ratio_older)
+    teachers_young = calc_teachers(sy, settings['ratio_young'])
+    teachers_older = calc_teachers(so, settings['ratio_older'])
     total_teachers = teachers_young + teachers_older
-
-    price = settings['price_per_student']
-    total_fee = total * price
+    total_fee = total * settings['price_per_student']
 
     selected_pathways = data['selected_pathways']
-    weeks_map = settings['pathway_weeks']
-    learning_time = calc_learning_time(selected_pathways, weeks_map)
+    learning_time = calc_learning_time(selected_pathways, settings['pathway_weeks'])
 
     pathway_details = []
     for p in selected_pathways:
@@ -134,7 +303,7 @@ def output_page():
         kits = calc_resources(total, kit_ratio)
         pathway_details.append({
             'name': p,
-            'weeks': weeks_map.get(p, 12),
+            'weeks': settings['pathway_weeks'].get(p, 12),
             'computers': computers,
             'kits': kits,
             'comp_ratio': comp_ratio,
@@ -180,8 +349,3 @@ def settings_page():
         return redirect(url_for('settings_page'))
 
     return render_template('settings.html', settings=settings, pathways=ALL_PATHWAYS)
-
-# -------------------
-# No app.run()!
-# Vercel will handle the serverless deployment
-# -------------------
